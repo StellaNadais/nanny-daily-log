@@ -1,0 +1,225 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  color: #000;
+  background: #fff;
+}
+
+/* --- Nanny System: ledger style (grayscale, no radius, no shadow) --- */
+.nanny-screen {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+.nanny-bg {
+  background: #fff;
+}
+
+.nanny-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 2px solid #000;
+  background: #fff;
+}
+
+.nanny-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+  color: #000;
+}
+
+.nanny-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 2px solid #000;
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+}
+
+.nanny-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.nanny-icon-photo {
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.nanny-daily-main {
+  flex: 1;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.nanny-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, 1fr);
+  border: 2px solid #000;
+  background: #fff;
+}
+
+.nanny-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 5rem;
+  padding: 1rem;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  background: #fff;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  color: #000;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* Right column: no right border (grid edge) */
+.nanny-grid .nanny-section:nth-child(2),
+.nanny-grid .nanny-section:nth-child(4),
+.nanny-grid .nanny-section:nth-child(6),
+.nanny-grid .nanny-section:nth-child(8) {
+  border-right: none;
+}
+
+.nanny-section:active {
+  background: #f0f0f0;
+}
+
+.nanny-section-label {
+  display: block;
+}
+
+.nanny-section-internal {
+  /* Nanny view only - same style, could add subtle label later */
+}
+
+.nanny-section-photo {
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nanny-cta {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #000;
+  background: #000;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.nanny-cta:active {
+  background: #333;
+}
+
+.nanny-hint {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #666;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Shared ledger components (other screens) */
+.nanny-card {
+  border: 2px solid #000;
+  background: #fff;
+}
+
+.nanny-card-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid #000;
+  background: #f5f5f5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nanny-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #000;
+  background: #fff;
+  font-size: 0.875rem;
+}
+
+.nanny-input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.nanny-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.375rem;
+  color: #000;
+}
+
+.nanny-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid #000;
+  background: #fff;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.nanny-btn:active {
+  background: #e5e5e5;
+}
+
+.nanny-btn-primary {
+  background: #000;
+  color: #fff;
+}
+
+.nanny-btn-primary:active {
+  background: #333;
+}
