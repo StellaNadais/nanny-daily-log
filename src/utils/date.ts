@@ -36,3 +36,18 @@ export function formatDayName(dateStr: string): string {
   const d = new Date(dateStr + 'T12:00:00');
   return d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
 }
+
+/** Time-of-day greeting: Good morning / Good afternoon / Good evening */
+export function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+/** Sentence for intro: "It's Thursday." */
+export function getDaySentence(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+  return `It's ${day}.`;
+}
