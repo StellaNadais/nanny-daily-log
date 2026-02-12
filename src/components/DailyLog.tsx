@@ -1,393 +1,55 @@
-@import "tailwindcss";
-
-@theme {
-  --font-sans: system-ui, -apple-system, sans-serif;
+export function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
-* {
-  box-sizing: border-box;
+export function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
 }
 
-html {
-  -webkit-text-size-adjust: 100%;
+export function getWeekRange(dateStr: string): { start: string; end: string } {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return {
+    start: monday.toISOString().slice(0, 10),
+    end: sunday.toISOString().slice(0, 10),
+  };
 }
 
-html, body, #root {
-  min-height: 100%;
-  height: 100%;
-  margin: 0;
+export function formatWeekLabel(start: string, end: string): string {
+  const s = new Date(start + 'T12:00:00');
+  const e = new Date(end + 'T12:00:00');
+  return `${s.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${e.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 }
 
-body {
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  color: #000;
-  background: #fff;
-  /* Safe area for notches / home indicator on mobile */
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
-  padding-bottom: env(safe-area-inset-bottom);
+export function formatDayName(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
 }
 
-/* --- Nanny System: ledger style (grayscale, no radius, no shadow) --- */
-.nanny-screen {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
+/** Time-of-day greeting: Good morning / Good afternoon / Good evening */
+export function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
-.nanny-bg {
-  background: #fff;
-}
-
-/* Page 1: full viewport — header + intro (greeting, day, weather) */
-.nanny-first-page {
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-}
-
-.nanny-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.875rem 1rem;
-  border-bottom: 2px solid #000;
-  background: #fff;
-}
-
-@media (min-width: 480px) {
-  .nanny-header {
-    padding: 1rem 1.25rem;
-  }
-}
-
-.nanny-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
-  color: #000;
-  line-height: 1.3;
-}
-
-@media (min-width: 480px) {
-  .nanny-title {
-    font-size: 1.125rem;
-  }
-}
-
-/* Intro: fills rest of first page, content centered */
-.nanny-intro {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem 1.5rem;
-  margin: 0;
-  background: #fff;
-}
-
-@media (min-width: 480px) {
-  .nanny-intro {
-    padding: 3rem 2rem;
-  }
-}
-
-.nanny-intro-line {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #000;
-  letter-spacing: 0.02em;
-  line-height: 1.4;
-  text-align: center;
-}
-
-.nanny-intro-line + .nanny-intro-line {
-  margin-top: 0.5rem;
-}
-
-.nanny-intro-weather {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: #333;
-}
-
-.nanny-intro-loading {
-  font-style: italic;
-  color: #666;
-}
-
-.nanny-intro-scroll-hint {
-  margin: 2rem 0 0;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #999;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-@media (min-width: 480px) {
-  .nanny-intro-line {
-    font-size: 1.75rem;
-  }
-  .nanny-intro-weather {
-    font-size: 1.25rem;
-  }
-  .nanny-intro-scroll-hint {
-    margin-top: 2.5rem;
-  }
-}
-
-.nanny-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0;
-  border: 2px solid #000;
-  background: #fff;
-  color: #000;
-  cursor: pointer;
-  /* Touch-friendly minimum 44px */
-}
-
-@media (min-width: 480px) {
-  .nanny-icon-btn {
-    min-width: 2.5rem;
-    min-height: 2.5rem;
-  }
-}
-
-.nanny-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
-.nanny-icon-photo {
-  width: 2rem;
-  height: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-/* Page 2: flashcards — scroll to reach, at least full viewport */
-.nanny-daily-main {
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  min-width: 0;
-  border-top: 2px solid #000;
-}
-
-@media (min-width: 480px) {
-  .nanny-daily-main {
-    padding: 1.25rem;
-    max-width: 28rem;
-    margin: 0 auto;
-    width: 100%;
-  }
-}
-
-/* Flash-card grid: responsive, mobile-first */
-.nanny-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  background: transparent;
-}
-
-@media (min-width: 480px) {
-  .nanny-grid {
-    gap: 1rem;
-  }
-}
-
-.nanny-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 4.5rem;
-  min-width: 0;
-  padding: 1rem 0.75rem;
-  border: 2px solid #000;
-  border-radius: 8px;
-  background: #fff;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.6875rem;
-  color: #000;
-  cursor: pointer;
-  text-align: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
-  /* Touch target at least ~44px tall when min-height + padding */
-  -webkit-tap-highlight-color: transparent;
-}
-
-@media (min-width: 480px) {
-  .nanny-section {
-    min-height: 5.5rem;
-    padding: 1.25rem 1rem;
-    font-size: 0.75rem;
-  }
-}
-
-.nanny-section:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-}
-
-.nanny-section:active {
-  background: #f5f5f5;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  transform: scale(0.98);
-}
-
-.nanny-section-label {
-  display: block;
-}
-
-.nanny-section-internal {
-  /* Nanny view only */
-}
-
-.nanny-section-photo {
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.nanny-cta {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  min-height: 2.75rem;
-  border: 2px solid #000;
-  background: #000;
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-@media (min-width: 480px) {
-  .nanny-cta {
-    padding: 1rem 1.25rem;
-    font-size: 0.75rem;
-  }
-}
-
-.nanny-cta:active {
-  background: #333;
-}
-
-.nanny-hint {
-  text-align: center;
-  font-size: 0.6875rem;
-  color: #666;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-@media (min-width: 480px) {
-  .nanny-hint {
-    font-size: 0.75rem;
-  }
-}
-
-/* Shared ledger components (other screens) */
-.nanny-card {
-  border: 2px solid #000;
-  background: #fff;
-}
-
-.nanny-card-header {
-  padding: 0.75rem 1rem;
-  border-bottom: 2px solid #000;
-  background: #f5f5f5;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.nanny-input {
-  width: 100%;
-  padding: 0.625rem 0.75rem;
-  min-height: 2.75rem;
-  border: 2px solid #000;
-  background: #fff;
-  font-size: 1rem;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-@media (min-width: 480px) {
-  .nanny-input {
-    min-height: auto;
-    font-size: 0.875rem;
-  }
-}
-
-.nanny-input:focus {
-  outline: none;
-  border-color: #000;
-}
-
-.nanny-label {
-  display: block;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.375rem;
-  color: #000;
-}
-
-.nanny-btn {
-  padding: 0.5rem 1rem;
-  min-height: 2.75rem;
-  border: 2px solid #000;
-  background: #fff;
-  color: #000;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-@media (min-width: 480px) {
-  .nanny-btn {
-    min-height: auto;
-  }
-}
-
-.nanny-btn:active {
-  background: #e5e5e5;
-}
-
-.nanny-btn-primary {
-  background: #000;
-  color: #fff;
-}
-
-.nanny-btn-primary:active {
-  background: #333;
+/** Sentence for intro: "It's Thursday." */
+export function getDaySentence(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
+  const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+  return `It's ${day}.`;
 }
 
 
