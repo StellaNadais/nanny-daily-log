@@ -1,6 +1,7 @@
+import { useState, useEffect } from 'react';
 import { MapPin, Camera } from 'lucide-react';
-import { todayISO } from '../utils/date';
-import { formatDayName } from '../utils/date';
+import { todayISO, formatDayName, getGreeting, getDaySentence } from '../utils/date';
+import { fetchWeather, type WeatherResult } from '../utils/weather';
 
 type Props = {
   onLocations: () => void;
@@ -21,25 +22,71 @@ const SECTIONS = [
 export function DailyLog({ onLocations, onGenerateReport, onSectionTap }: Props) {
   const date = todayISO();
   const dayName = formatDayName(date);
+  const greeting = getGreeting();
+  const daySentence = getDaySentence(date);
+
+  const [weather, setWeather] = useState<WeatherResult | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setWeatherLoading(true);
+    setWeatherError(false);
+    fetchWeather()
+      .then((result) => {
+        if (!cancelled) {
+          setWeather(result);
+          setWeatherLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setWeatherError(true);
+          setWeatherLoading(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const weatherLine = weatherLoading
+    ? '…'
+    : weatherError
+      ? ''
+      : `${weather!.tempF}°F and ${weather!.description}`;
 
   return (
     <div className="nanny-screen nanny-bg">
-      {/* Header */}
-      <header className="nanny-header">
-        <h1 className="nanny-title">
-          DAILY LOG — {dayName}
-        </h1>
-        <button
-          type="button"
-          onClick={onLocations}
-          className="nanny-icon-btn"
-          aria-label="Locations"
-        >
-          <MapPin className="nanny-icon" />
-        </button>
-      </header>
+      {/* Page 1: full screen — header + intro (greeting, day, weather) */}
+      <section className="nanny-first-page">
+        <header className="nanny-header">
+          <h1 className="nanny-title">
+            DAILY LOG — {dayName}
+          </h1>
+          <button
+            type="button"
+            onClick={onLocations}
+            className="nanny-icon-btn"
+            aria-label="Locations"
+          >
+            <MapPin className="nanny-icon" />
+          </button>
+        </header>
+        <div className="nanny-intro">
+          <p className="nanny-intro-line">{greeting}</p>
+          <p className="nanny-intro-line">{daySentence}</p>
+          {weatherLine ? (
+            <p className="nanny-intro-line nanny-intro-weather">{weatherLine}</p>
+          ) : weatherLoading ? (
+            <p className="nanny-intro-line nanny-intro-weather nanny-intro-loading">Loading weather…</p>
+          ) : null}
+          <p className="nanny-intro-scroll-hint">Scroll for daily log</p>
+        </div>
+      </section>
 
-      {/* Grid of sections */}
+      {/* Page 2: flashcards (scroll to reach) */}
       <main className="nanny-daily-main">
         <div className="nanny-grid">
           {SECTIONS.map(({ id, label }) => (
@@ -74,3 +121,4 @@ export function DailyLog({ onLocations, onGenerateReport, onSectionTap }: Props)
     </div>
   );
 }
+
