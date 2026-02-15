@@ -14,8 +14,15 @@ export function LoggingScreen({ locations, onBack, onLog }: Props) {
   const [date, setDate] = useState(todayISO());
   const [locationId, setLocationId] = useState('');
   const [notes, setNotes] = useState('');
+  const [parkingPrice, setParkingPrice] = useState('');
+  const [ticketsPrice, setTicketsPrice] = useState('');
 
   const selectedLocation = locations.find((l) => l.id === locationId);
+
+  const parseNum = (s: string): number | undefined => {
+    const n = parseFloat(s.replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? undefined : n;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,12 +31,16 @@ export function LoggingScreen({ locations, onBack, onLog }: Props) {
       id: Date.now().toString(),
       date,
       locationId: selectedLocation.id,
-      locationName: selectedLocation.name,
+      locationName: selectedLocation.nickname || selectedLocation.name,
       roundTripMiles: selectedLocation.roundTripMiles,
       notes: notes.trim() || undefined,
+      parkingPrice: parseNum(parkingPrice),
+      ticketsPrice: parseNum(ticketsPrice),
     });
     setLocationId('');
     setNotes('');
+    setParkingPrice('');
+    setTicketsPrice('');
     onBack();
   };
 
@@ -40,7 +51,7 @@ export function LoggingScreen({ locations, onBack, onLog }: Props) {
           <ChevronLeft className="nanny-icon" />
           Back
         </button>
-        <h1 className="nanny-title">LOG ACTIVITY</h1>
+        <h1 className="nanny-title">Trip Log</h1>
         <div style={{ width: '5rem' }} />
       </header>
 
@@ -68,15 +79,37 @@ export function LoggingScreen({ locations, onBack, onLog }: Props) {
                 <option value="">Select a location</option>
                 {locations.map((loc) => (
                   <option key={loc.id} value={loc.id}>
-                    {loc.name} ({loc.roundTripMiles} mi round-trip)
+                    {loc.nickname ? `${loc.nickname} (${loc.roundTripMiles} mi)` : `${loc.name} (${loc.roundTripMiles} mi round-trip)`}
                   </option>
                 ))}
               </select>
               {locations.length === 0 && (
                 <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem' }}>
-                  Add locations in Manage Locations first.
+                  Add locations via the map icon on the home screen.
                 </p>
               )}
+            </div>
+            <div>
+              <label className="nanny-label">Parking (optional)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={parkingPrice}
+                onChange={(e) => setParkingPrice(e.target.value)}
+                placeholder="e.g., 5.00"
+                className="nanny-input"
+              />
+            </div>
+            <div>
+              <label className="nanny-label">Tickets for events (optional)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={ticketsPrice}
+                onChange={(e) => setTicketsPrice(e.target.value)}
+                placeholder="e.g., 12.50"
+                className="nanny-input"
+              />
             </div>
             <div>
               <label className="nanny-label">Notes (optional)</label>
@@ -103,3 +136,4 @@ export function LoggingScreen({ locations, onBack, onLog }: Props) {
     </div>
   );
 }
+
