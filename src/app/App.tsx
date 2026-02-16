@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { HomeScreen } from '../components/HomeScreen';
 import { ShiftScreen } from '../features/shift/ShiftScreen';
 import { AddGigScreen } from '../features/shift/AddGigScreen';
+import { AddRequestScreen } from '../features/shift/AddRequestScreen';
 import { MealsScreen } from '../features/meals/MealsScreen';
 import { KidJournalScreen } from '../features/kid-journal/KidJournalScreen';
 import { LoggingScreen } from '../components/LoggingScreen';
@@ -13,6 +14,7 @@ import type {
   SavedLocation,
   LogEntry,
   Gig,
+  Request,
   ShiftLog,
   MealNote,
   CareNote,
@@ -24,6 +26,7 @@ const STORAGE_KEYS = {
   entries: 'nanny-entries',
   gigs: 'nanny-gigs',
   shiftLogs: 'nanny-shift-logs',
+  requests: 'nanny-requests',
   mealNotes: 'nanny-meal-notes',
   careNotes: 'nanny-care-notes',
   internalNotes: 'nanny-internal-notes',
@@ -49,6 +52,7 @@ export default function App() {
   const [locations, setLocations] = useState<SavedLocation[]>(() => load(STORAGE_KEYS.locations, []));
   const [entries, setEntries] = useState<LogEntry[]>(() => load(STORAGE_KEYS.entries, []));
   const [gigs, setGigs] = useState<Gig[]>(() => load(STORAGE_KEYS.gigs, []));
+  const [requests, setRequests] = useState<Request[]>(() => load(STORAGE_KEYS.requests, []));
   const [shiftLogs, setShiftLogs] = useState<ShiftLog[]>(() => load(STORAGE_KEYS.shiftLogs, []));
   const [mealNotes, setMealNotes] = useState<MealNote[]>(() => load(STORAGE_KEYS.mealNotes, []));
   const [careNotes, setCareNotes] = useState<CareNote[]>(() => load(STORAGE_KEYS.careNotes, []));
@@ -65,6 +69,9 @@ export default function App() {
   useEffect(() => {
     save(STORAGE_KEYS.gigs, gigs);
   }, [gigs]);
+  useEffect(() => {
+    save(STORAGE_KEYS.requests, requests);
+  }, [requests]);
   useEffect(() => {
     save(STORAGE_KEYS.shiftLogs, shiftLogs);
   }, [shiftLogs]);
@@ -87,6 +94,26 @@ export default function App() {
 
   const handleSaveShiftLog = useCallback((log: ShiftLog) => {
     setShiftLogs((prev) => [...prev, log]);
+  }, []);
+
+  const handleAddRequest = useCallback((req: Request) => {
+    setRequests((prev) => [...prev, req]);
+  }, []);
+
+  const handleApproveRequest = useCallback((req: Request) => {
+    handleSaveGig({
+      id: Date.now().toString(),
+      date: req.date,
+      familyName: req.familyName,
+      startTime: req.startTime,
+      endTime: req.endTime,
+      notes: req.notes,
+    });
+    setRequests((prev) => prev.filter((r) => r.id !== req.id));
+  }, [handleSaveGig]);
+
+  const handleDeclineRequest = useCallback((req: Request) => {
+    setRequests((prev) => prev.filter((r) => r.id !== req.id));
   }, []);
 
   const handleSaveMealNote = useCallback((note: MealNote) => {
@@ -136,6 +163,15 @@ export default function App() {
     return <WeeklyReport entries={entries} onBack={() => setScreen('home')} />;
   }
 
+  if (screen === 'add-request') {
+    return (
+      <AddRequestScreen
+        onBack={() => setScreen('shift')}
+        onSave={handleAddRequest}
+      />
+    );
+  }
+
   if (screen === 'add-gig' && addGigDate) {
     return (
       <AddGigScreen
@@ -156,11 +192,15 @@ export default function App() {
     return (
       <ShiftScreen
         gigs={gigs}
+        requests={requests}
         onBack={() => setScreen('home')}
         onAddGig={(date) => {
           setAddGigDate(date);
           setScreen('add-gig');
         }}
+        onAddRequest={() => setScreen('add-request')}
+        onApproveRequest={handleApproveRequest}
+        onDeclineRequest={handleDeclineRequest}
         onSaveShiftLog={handleSaveShiftLog}
       />
     );
@@ -180,7 +220,6 @@ export default function App() {
     return (
       <KidJournalScreen
         notes={careNotes}
-        locations={locations}
         entries={entries}
         onBack={() => setScreen('home')}
         onSave={handleSaveCareNote}
@@ -213,6 +252,12 @@ export default function App() {
   return (
     <HomeScreen
       onLocations={() => setScreen('locations')}
+      onSectionTap={handleSectionTap}
+      onGenerateReport={() => setScreen('report')}
+    />
+  );
+}
+
       onSectionTap={handleSectionTap}
       onGenerateReport={() => setScreen('report')}
     />
