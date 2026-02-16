@@ -136,3 +136,4 @@ export function LoggingScreen({ locations, onBack, onLog }: Props) {
     </div>
   );
 }
+
