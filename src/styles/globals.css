@@ -120,6 +120,7 @@ body {
 }
 
 .nanny-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -171,6 +172,22 @@ body {
 
 .nanny-weather-loading {
   color: #888;
+}
+
+.nanny-hero-scroll-hint {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin: 0;
+  font-size: 0.75rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .nanny-flashcards {
