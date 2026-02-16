@@ -42,3 +42,4 @@ export function DailyLog({ onLocations, onGenerateReport, onSectionTap }: Props)
     </div>
   );
 }
+
