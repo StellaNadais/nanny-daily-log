@@ -34,6 +34,16 @@ export type Gig = {
   notes?: string;
 };
 
+// Family/client request for a shift (approve → Gig, decline → remove)
+export type Request = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  familyName: string;
+  startTime: ShiftStartTime;
+  endTime: ShiftEndTime;
+  notes?: string;
+};
+
 export type ShiftLog = {
   id: string;
   date: string;
@@ -65,6 +75,8 @@ export type InternalNote = {
 export type AppScreen =
   | 'home'
   | 'shift'
+  | 'add-gig'
+  | 'add-request'
   | 'meals'
   | 'kid-journal'
   | 'trip-log'
