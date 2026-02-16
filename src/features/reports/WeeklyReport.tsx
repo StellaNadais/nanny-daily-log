@@ -114,3 +114,4 @@ export function WeeklyReport({ entries, onBack }: Props) {
     </div>
   );
 }
+
