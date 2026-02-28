@@ -148,3 +148,4 @@ export function CareNotesScreen({ notes, locations, onBack, onSave }: Props) {
     </div>
   );
 }
+
