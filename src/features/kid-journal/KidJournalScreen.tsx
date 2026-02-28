@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronDown, ChevronUp, Download } from 'lucide-react';
-import type { CareNote } from '../../types';
-import type { SavedLocation } from '../../types';
+import { ChevronLeft, Download } from 'lucide-react';
+import type { CareNote, Mood } from '../../types';
 import type { LogEntry } from '../../types';
+
+const MOODS: Mood[] = ['grumpy', 'happy', 'sad', 'quiet', 'sleepy', 'sick'];
 import { todayISO, formatDate, getWeekRange, formatWeekLabel } from '../../utils/date';
-import { MILEAGE_RATE_CENTS } from '../../types';
 
 type Props = {
   notes: CareNote[];
-  locations: SavedLocation[];
   entries: LogEntry[];
   onBack: () => void;
   onSave: (note: CareNote) => void;
@@ -24,18 +23,55 @@ function downloadText(filename: string, text: string) {
   URL.revokeObjectURL(url);
 }
 
-export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: Props) {
+function downloadReceiptHTML(filename: string, title: string, mood: string | undefined, journalContent: string, dateLabel: string) {
+  const moodLine = mood ? `<p class="receipt-line">Mood: ${mood}</p>` : '';
+  const content = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 1rem; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; background: #eee; font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace; }
+    .receipt { max-width: 20rem; padding: 1rem 1.25rem 1rem 1.5rem; background-image: linear-gradient(to bottom, #fafaf8, #f5f5f0), linear-gradient(to bottom, #e74c3c, #f39c12, #f1c40f, #2ecc71, #3498db, #9b59b6); background-size: 100% 100%, 4px 100%; background-position: 0 0, left top; background-repeat: no-repeat, no-repeat; border: 2px dashed #bbb; font-size: 0.875rem; }
+    .receipt-title { font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.5rem 0; background: linear-gradient(to bottom, #e74c3c, #f39c12, #f1c40f, #2ecc71, #3498db, #9b59b6); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .receipt-line { margin: 0.25rem 0; color: #333; white-space: pre-wrap; word-break: break-word; }
+    .receipt-divider { border: none; border-top: 1px dashed #ccc; margin: 0.75rem 0; }
+    .receipt-meta { font-size: 0.75rem; color: #666; margin-bottom: 0.5rem; }
+  </style>
+</head>
+<body>
+  <div class="receipt">
+    <h1 class="receipt-title">Journal of the day</h1>
+    <p class="receipt-meta">${dateLabel}</p>
+    ${moodLine}
+    <hr class="receipt-divider" />
+    <div class="receipt-line">${journalContent.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>')}</div>
+  </div>
+</body>
+</html>`;
+  const blob = new Blob([content], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function KidJournalScreen({ notes, entries, onBack, onSave }: Props) {
   const [date, setDate] = useState(todayISO());
   const [content, setContent] = useState('');
   const [gifUrl, setGifUrl] = useState('');
-  const [locationsOpen, setLocationsOpen] = useState(false);
-
+  const [mood, setMood] = useState<Mood | ''>('');
   const existingNote = notes.find((n) => n.date === date);
 
   useEffect(() => {
     const note = notes.find((n) => n.date === date);
     setContent(note?.content ?? '');
     setGifUrl(note?.gifUrl ?? '');
+    setMood(note?.mood ?? '');
   }, [date, notes]);
 
   const handleSave = (e: React.FormEvent) => {
@@ -45,6 +81,7 @@ export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: 
       date,
       content,
       gifUrl: gifUrl.trim() || undefined,
+      mood: mood || undefined,
     });
   };
 
@@ -53,21 +90,15 @@ export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: 
 
   const handleDownloadDay = () => {
     const note = notes.find((n) => n.date === date);
-    const lines: string[] = [
-      `Kid Journal — ${formatDate(date)}`,
-      '',
-      '--- Info of the day ---',
-      dayEntries.length > 0
-        ? dayEntries
-            .map((e) => `${e.locationName}: ${e.roundTripMiles} mi${e.notes ? ` — ${e.notes}` : ''}`)
-            .join('\n')
-        : 'No trips logged',
-      dayMiles > 0 ? `Total miles: ${dayMiles.toFixed(1)}` : '',
-      '',
-      '--- Journal ---',
-      note?.content || content || '(No notes saved)',
-    ];
-    downloadText(`kid-journal-${date}.txt`, lines.join('\n'));
+    const dateLabel = formatDate(date);
+    const journalContent = note?.content || content || '(No notes saved)';
+    downloadReceiptHTML(
+      `journal-of-the-day-${date}.html`,
+      `Journal of the day — ${dateLabel}`,
+      note?.mood,
+      journalContent,
+      dateLabel
+    );
   };
 
   const week = getWeekRange(date);
@@ -85,6 +116,7 @@ export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: 
           return [
             '═══════════════════════',
             formatDate(n.date),
+            n.mood ? `Mood: ${n.mood}` : '',
             '',
             'Trips / miles:',
             dayEntriesForNote.length > 0
@@ -115,6 +147,21 @@ export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: 
       <main style={{ flex: 1, padding: '1.25rem', overflowY: 'auto' }}>
         <form onSubmit={handleSave} style={{ maxWidth: '32rem', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div className="nanny-card" style={{ padding: '1rem' }}>
+            <div className="nanny-mood-bar">
+              <span className="nanny-mood-label">Today's mood</span>
+              <div className="nanny-mood-options">
+                {MOODS.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`nanny-mood-chip ${mood === m ? 'nanny-mood-chip-active' : ''}`}
+                    onClick={() => setMood(mood === m ? '' : m)}
+                  >
+                    {m}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div style={{ marginBottom: '1rem' }}>
               <label className="nanny-label">Date</label>
               <input
@@ -141,73 +188,14 @@ export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: 
               )}
             </div>
 
-            <div className="nanny-card" style={{ padding: '0.75rem', marginBottom: '1rem', background: '#f9f9f9', border: '2px solid #e5e5e5' }}>
-              <div className="nanny-label" style={{ marginBottom: '0.5rem' }}>Info of the day</div>
-              {dayEntries.length > 0 ? (
-                <>
-                  {dayEntries.map((e) => (
-                    <div key={e.id} style={{ fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                      {e.locationName} — {e.roundTripMiles} mi
-                    </div>
-                  ))}
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, marginTop: '0.25rem' }}>
-                    Total: {dayMiles.toFixed(1)} mi · ${(dayMiles * MILEAGE_RATE_CENTS).toFixed(2)}
-                  </div>
-                </>
-              ) : (
-                <div style={{ fontSize: '0.875rem', color: '#666' }}>No trips logged for this date</div>
-              )}
-            </div>
-
-            {locations.length > 0 && (
-              <div className="nanny-card" style={{ marginBottom: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setLocationsOpen(!locationsOpen)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    border: 'none',
-                    borderBottom: locationsOpen ? '2px solid #000' : 'none',
-                    background: '#f5f5f5',
-                    font: 'inherit',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Nickname locations (miles)
-                  {locationsOpen ? <ChevronUp className="nanny-icon" /> : <ChevronDown className="nanny-icon" />}
-                </button>
-                {locationsOpen && (
-                  <div style={{ padding: '1rem', borderTop: '2px solid #000' }}>
-                    {locations.map((loc) => (
-                      <div key={loc.id} style={{ padding: '0.5rem 0', borderBottom: '1px solid #eee', fontSize: '0.875rem' }}>
-                        <strong>{loc.nickname || loc.name}</strong>
-                        {loc.nickname && loc.name !== loc.nickname && (
-                          <span style={{ color: '#666', fontWeight: 400 }}> ({loc.name})</span>
-                        )}
-                        <span style={{ color: '#444', marginLeft: '0.5rem' }}> — {loc.roundTripMiles} mi</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div style={{ marginBottom: '1rem' }}>
-              <label className="nanny-label">Journal</label>
+            <div className="nanny-journal-receipt">
+              <label className="nanny-journal-receipt-label">Journal of the day</label>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Notes, activities, observations..."
                 rows={6}
-                className="nanny-input"
+                className="nanny-input nanny-journal-receipt-text"
                 style={{ resize: 'none' }}
               />
             </div>
@@ -241,3 +229,4 @@ export function KidJournalScreen({ notes, locations, entries, onBack, onSave }: 
     </div>
   );
 }
+
