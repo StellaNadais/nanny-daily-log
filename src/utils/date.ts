@@ -57,3 +57,4 @@ export function getGreetingText(): string {
   return `${labels[greeting]}, it's ${day}`;
 }
 
+
