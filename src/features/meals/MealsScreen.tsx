@@ -2,6 +2,24 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, Plus, Trash2 } from 'lucide-react';
 import type { MealNote } from '../../types';
 import { todayISO } from '../../utils/date';
+import { colorizeFoodText } from '../../utils/foodColors';
+
+function MealTextWithColors({ text }: { text: string }) {
+  const segments = colorizeFoodText(text);
+  return (
+    <span style={{ fontSize: '0.875rem', lineHeight: 1.5 }}>
+      {segments.map((seg, i) =>
+        seg.type === 'food' ? (
+          <span key={i} style={{ color: seg.color, fontWeight: 600 }}>
+            {seg.content}
+          </span>
+        ) : (
+          <span key={i}>{seg.content}</span>
+        )
+      )}
+    </span>
+  );
+}
 
 type Props = {
   mealNotes: MealNote[];
@@ -80,11 +98,16 @@ export function MealsScreen({ mealNotes, onBack, onSave }: Props) {
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Meal notes, snacks, preferences..."
+                placeholder="e.g. cheese, banana, yogurt..."
                 rows={4}
                 className="nanny-input"
                 style={{ resize: 'none' }}
               />
+              {notes.trim() && (
+                <div className="nanny-meals-color-preview" style={{ marginTop: '0.5rem', padding: '0.5rem 0.75rem', border: '1px dashed #ccc', background: '#fafafa', minHeight: '2rem', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                  <MealTextWithColors text={notes} />
+                </div>
+              )}
             </div>
 
             <div>
@@ -135,7 +158,11 @@ export function MealsScreen({ mealNotes, onBack, onSave }: Props) {
             <div className="nanny-card">
               <div className="nanny-card-header">Saved for {date}</div>
               <div style={{ padding: '1rem', borderTop: '2px solid #000' }}>
-                {existingNote.notes && <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem' }}>{existingNote.notes}</p>}
+                {existingNote.notes && (
+                  <p style={{ margin: '0 0 0.5rem 0' }}>
+                    <MealTextWithColors text={existingNote.notes} />
+                  </p>
+                )}
                 {existingNote.groceryList.length > 0 && (
                   <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.875rem' }}>
                     {existingNote.groceryList.map((item, i) => (
@@ -151,3 +178,4 @@ export function MealsScreen({ mealNotes, onBack, onSave }: Props) {
     </div>
   );
 }
+
