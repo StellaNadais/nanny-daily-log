@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Cloud, CloudRain, Sun, CloudSnow } from 'lucide-react';
+import { MapPin, Cloud, CloudRain, Sun, CloudSnow, ChevronDown, Lock } from 'lucide-react';
 import { getGreetingText } from '../utils/date';
+import { ScheduleSection } from './ScheduleSection';
+import type { Gig, Request } from '../types';
 
 // Moraga, CA coordinates
 const MORAGA_LAT = 37.835;
 const MORAGA_LON = -122.13;
 
-// Chinese dragon GIF for the hero (lunar new year dragon dance)
+// Chinese dragon GIF for the hero
 const HERO_GIF_URL = 'https://media.giphy.com/media/FuryYJiAsImCqXc2Fs/giphy.gif';
 
 type WeatherData = {
@@ -53,9 +55,15 @@ const WeatherIcon = ({ icon }: { icon: 'sun' | 'cloud' | 'rain' | 'snow' }) => {
 };
 
 type Props = {
+  gigs: Gig[];
+  requests: Request[];
   onLocations: () => void;
   onSectionTap: (section: string) => void;
   onGenerateReport?: () => void;
+  onAddGig?: (date: string) => void;
+  onAddRequest?: () => void;
+  onApproveRequest?: (req: Request) => void;
+  onDeclineRequest?: (req: Request) => void;
 };
 
 const SECTIONS = [
@@ -66,7 +74,7 @@ const SECTIONS = [
   { id: 'internal-notes', label: 'Internal Notes' },
 ] as const;
 
-export function HomeScreen({ onLocations, onSectionTap, onGenerateReport }: Props) {
+export function HomeScreen({ gigs, requests, onLocations, onSectionTap, onGenerateReport, onAddGig, onAddRequest, onApproveRequest, onDeclineRequest }: Props) {
   const [weather, setWeather] = useState<WeatherData>(null);
 
   useEffect(() => {
@@ -108,9 +116,26 @@ export function HomeScreen({ onLocations, onSectionTap, onGenerateReport }: Prop
               <span className="nanny-weather-loading">Loading weather…</span>
             )}
           </div>
+          <p className="nanny-hero-scroll-hint">
+            <ChevronDown className="nanny-icon" />
+            Scroll down to view availability and request a date
+          </p>
         </section>
 
+        <ScheduleSection
+          gigs={gigs}
+          requests={requests}
+          onAddGig={onAddGig}
+          onAddRequest={onAddRequest}
+          onApproveRequest={onApproveRequest}
+          onDeclineRequest={onDeclineRequest}
+        />
+
         <section className="nanny-home-page nanny-flashcards">
+          <p className="nanny-private-banner">
+            <Lock className="nanny-icon" />
+            Private — Nanny access only
+          </p>
           <div className="nanny-grid-cards">
             {SECTIONS.map(({ id, label }) => (
               <button
