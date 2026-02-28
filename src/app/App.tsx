@@ -166,7 +166,7 @@ export default function App() {
   if (screen === 'add-request') {
     return (
       <AddRequestScreen
-        onBack={() => setScreen('shift')}
+        onBack={() => setScreen('home')}
         onSave={handleAddRequest}
       />
     );
@@ -177,7 +177,7 @@ export default function App() {
       <AddGigScreen
         date={addGigDate}
         onBack={() => {
-          setScreen('shift');
+          setScreen('home');
           setAddGigDate(null);
         }}
         onSave={(g) => {
@@ -191,16 +191,7 @@ export default function App() {
   if (screen === 'shift') {
     return (
       <ShiftScreen
-        gigs={gigs}
-        requests={requests}
         onBack={() => setScreen('home')}
-        onAddGig={(date) => {
-          setAddGigDate(date);
-          setScreen('add-gig');
-        }}
-        onAddRequest={() => setScreen('add-request')}
-        onApproveRequest={handleApproveRequest}
-        onDeclineRequest={handleDeclineRequest}
         onSaveShiftLog={handleSaveShiftLog}
       />
     );
@@ -251,15 +242,19 @@ export default function App() {
 
   return (
     <HomeScreen
+      gigs={gigs}
+      requests={requests}
       onLocations={() => setScreen('locations')}
       onSectionTap={handleSectionTap}
       onGenerateReport={() => setScreen('report')}
+      onAddGig={(date) => {
+        setAddGigDate(date);
+        setScreen('add-gig');
+      }}
+      onAddRequest={() => setScreen('add-request')}
+      onApproveRequest={handleApproveRequest}
+      onDeclineRequest={handleDeclineRequest}
     />
   );
 }
 
-      onSectionTap={handleSectionTap}
-      onGenerateReport={() => setScreen('report')}
-    />
-  );
-}
